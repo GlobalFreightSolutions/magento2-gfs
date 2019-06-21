@@ -189,6 +189,13 @@ class Data
         $data['Transit'] = $this->getOrderTransit();
         $data['Shipper'] = $this->getOrderShipper();
         $data['Value'] = $this->getOrderValue();
+        switch ($this->_config->getWeightUnit()) {
+            case 'lbs':
+                $data['imperialDimensions'] = $this->getOrderImperialDimensions();
+                break;
+            default:
+                $data['MetricDimensions'] = $this->getOrderMetricDimensions();
+        }
 
         return $data;
     }
@@ -286,6 +293,48 @@ class Data
         return [
             'CurrencyCode' => $quote->getQuoteCurrencyCode(),
             'Value'        => (float) $quote->getSubtotalWithDiscount()
+        ];
+    }
+
+    /**
+     * Get Order Imperial Dimensions
+     *
+     * @return array
+     */
+    public function getOrderImperialDimensions()
+    {
+        $quote = $this->getQuote();
+        $weight = 0;
+        foreach ($quote->getAllVisibleItems() as $item) {
+            $weight += (float) $item->getWeight();
+        }
+
+        return [
+            'weight' => [
+                'pounds' => $weight,
+                'ounces' => (float) ($weight * 16),
+            ]
+        ];
+    }
+
+    /**
+     * Get Order Metric Dimensions
+     *
+     * @return array
+     */
+    public function getOrderMetricDimensions()
+    {
+        $quote = $this->getQuote();
+        $weight = 0;
+        foreach ($quote->getAllVisibleItems() as $item) {
+            $weight += (float) $item->getWeight();
+        }
+
+        return [
+            'weight' => [
+                'scale' => 'wiKilograms',
+                'value' => $weight,
+            ],
         ];
     }
 
@@ -512,11 +561,9 @@ class Data
             }
 
             $fields[] = [
-                'CustomFieldDTO' => [
-                    'FieldName'  => $fieldNumber,
-                    'FieldType'  => $type,
-                    'FieldValue' => $value,
-                ]
+                'FieldName'  => $fieldNumber,
+                'FieldType'  => $type,
+                'FieldValue' => $value,
             ];
 
             $fieldNumber++;

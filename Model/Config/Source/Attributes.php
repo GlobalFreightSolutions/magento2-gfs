@@ -64,11 +64,13 @@ class Attributes implements OptionSourceInterface
      */
     protected function _getProductAttributes()
     {
+        /** @var Collection $attributes */
         $attributes = $this->_attributeCollectionFactory->create();
         $attributes->addVisibleFilter();
         $attributes->addFieldToFilter('backend_type', [
             'neq' => 'static'
         ]);
+        $attributes->setOrder(Attribute::FRONTEND_LABEL, Collection::SORT_ORDER_ASC);
 
         return $attributes;
     }

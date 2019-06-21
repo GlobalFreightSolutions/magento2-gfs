@@ -63,7 +63,86 @@ define([
                     }
                 );
             }
-        }
+        },
+        /**
+         * @return {Boolean}
+         */
+        validateShippingInformation: function () {
+            var shippingAddress,
+                addressData,
+                loginFormSelector = 'form[data-role=email-with-possible-login]',
+                emailValidationResult = customer.isLoggedIn(),
+                field;
+
+            if (!quote.shippingMethod()) {
+                this.errorValidationMessage(
+                    $t('The shipping method is missing. Select the shipping method and try again.')
+                );
+
+                return false;
+            }
+
+            if (!$('input[name="checkoutResult"]').val()) {
+                this.errorValidationMessage(
+                    $t('Select the shipping method and try again.')
+                );
+
+                return false;
+            }
+
+            if (!customer.isLoggedIn()) {
+                $(loginFormSelector).validation();
+                emailValidationResult = Boolean($(loginFormSelector + ' input[name=username]').valid());
+            }
+
+            if (this.isFormInline) {
+                this.source.set('params.invalid', false);
+                this.triggerShippingDataValidateEvent();
+
+                if (emailValidationResult &&
+                    this.source.get('params.invalid') ||
+                    !quote.shippingMethod()['method_code'] ||
+                    !quote.shippingMethod()['carrier_code']
+                ) {
+                    this.focusInvalid();
+
+                    return false;
+                }
+
+                shippingAddress = quote.shippingAddress();
+                addressData = addressConverter.formAddressDataToQuoteAddress(
+                    this.source.get('shippingAddress')
+                );
+
+                //Copy form data to quote shipping address object
+                for (field in addressData) {
+                    if (addressData.hasOwnProperty(field) &&  //eslint-disable-line max-depth
+                        shippingAddress.hasOwnProperty(field) &&
+                        typeof addressData[field] != 'function' &&
+                        _.isEqual(shippingAddress[field], addressData[field])
+                    ) {
+                        shippingAddress[field] = addressData[field];
+                    } else if (typeof addressData[field] != 'function' &&
+                        !_.isEqual(shippingAddress[field], addressData[field])) {
+                        shippingAddress = addressData;
+                        break;
+                    }
+                }
+
+                if (customer.isLoggedIn()) {
+                    shippingAddress['save_in_address_book'] = 1;
+                }
+                selectShippingAddress(shippingAddress);
+            }
+
+            if (!emailValidationResult) {
+                $(loginFormSelector + ' input[name=username]').focus();
+
+                return false;
+            }
+
+            return true;
+        },
     };
 
     return function (target) {

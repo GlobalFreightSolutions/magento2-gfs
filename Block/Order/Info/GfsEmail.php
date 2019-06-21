@@ -52,9 +52,11 @@ class GfsEmail extends Gfs
         $template = null;
         $order = $this->getOrder();
         $gfsShippingData = $this->_gfsHelper->getGfsShippingData($order);
-        if (empty($gfsShippingData)) {
+        $gfsCloseCheckoutData = $this->getGfsCloseCheckoutData();
+        if (empty($gfsShippingData) || empty($gfsCloseCheckoutData)) {
             return $template;
         }
+
         if (isset($gfsShippingData['shippingMethodType'])) {
             $template = sprintf('JustShout_Gfs::order/info/gfs-email/%s.phtml', $gfsShippingData['shippingMethodType']);
         }

@@ -17,13 +17,6 @@ use Magento\Framework\View\Element\Template;
 class Head extends Template
 {
     /**
-     * {@inheritdoc}
-     *
-     * @var string
-     */
-    protected $_template = 'JustShout_Gfs::html/head.phtml';
-
-    /**
      * GFS Client
      *
      * @var Client

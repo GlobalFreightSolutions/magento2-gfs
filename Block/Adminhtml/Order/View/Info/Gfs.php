@@ -268,7 +268,8 @@ class Gfs extends AbstractOrder
         $template = null;
         $order = $this->getOrder();
         $gfsShippingData = $this->_gfsHelper->getGfsShippingData($order);
-        if (empty($gfsShippingData)) {
+        $gfsCloseCheckoutData = $this->getGfsCloseCheckoutData();
+        if (empty($gfsShippingData) || empty($gfsCloseCheckoutData)) {
             return $template;
         }
 

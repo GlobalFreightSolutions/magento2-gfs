@@ -19,12 +19,12 @@ class Information extends Field
     /**
      * Checkout Configuration Login Link
      */
-    const GFS_CHECKOUT_LOGIN = 'https://seeker.justshoutgfs.com/loginCheckout.asp';
+    const GFS_CHECKOUT_LOGIN = 'https://checkout.justshoutgfs.com/';
 
     /**
      * Checkout Configuration Register Link
      */
-    const GFS_CHECKOUT_REGISTER = 'https://seeker.justshoutgfs.com/RegisterCheckoutContact.asp?FTypeID=1';
+    const GFS_CHECKOUT_REGISTER = 'https://register.gfsdeliver.com/';
 
     /**
      * Module List
