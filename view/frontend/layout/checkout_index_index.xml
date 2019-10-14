@@ -8,53 +8,5 @@
                 <block class="JustShout\Gfs\Block\Html\Head" name="gfs.head.scripts" template="JustShout_Gfs::html/head/scripts.phtml"/>
             </block>
         </referenceBlock>
-        <referenceBlock name="checkout.root">
-            <arguments>
-                <argument name="jsLayout" xsi:type="array">
-                    <item name="components" xsi:type="array">
-                        <item name="checkout" xsi:type="array">
-                            <item name="children" xsi:type="array">
-                                <item name="steps" xsi:type="array">
-                                    <item name="children" xsi:type="array">
-                                        <item name="shipping-step" xsi:type="array">
-                                            <item name="children" xsi:type="array">
-                                                <item name="shippingAddress" xsi:type="array">
-                                                        <item name="config" xsi:type="array">
-                                                            <item name="shippingMethodListTemplate" xsi:type="string">JustShout_Gfs/shipping-address/shipping-method-list</item>
-                                                            <item name="shippingMethodItemTemplate" xsi:type="string">JustShout_Gfs/shipping-address/shipping-method-item</item>
-                                                        </item>
-                                                        <item name="children" xsi:type="array">
-                                                        <item name="shippingAdditional" xsi:type="array">
-                                                            <item name="component" xsi:type="string">uiComponent</item>
-                                                            <item name="displayArea" xsi:type="string">shippingAdditional</item>
-                                                            <item name="children" xsi:type="array">
-                                                                <item name="gfs_carrier_form" xsi:type="array">
-                                                                    <item name="component" xsi:type="string">JustShout_Gfs/js/view/checkout/shipping/gfs</item>
-                                                                </item>
-                                                            </item>
-                                                        </item>
-                                                    </item>
-                                                </item>
-                                                <item name="step-config" xsi:type="array">
-                                                    <item name="children" xsi:type="array">
-                                                        <item name="shipping-rates-validation" xsi:type="array">
-                                                            <item name="children" xsi:type="array">
-                                                                <item name="gfs-rates-validation" xsi:type="array">
-                                                                    <item name="component" xsi:type="string">JustShout_Gfs/js/view/shipping-rates-validation</item>
-                                                                </item>
-                                                            </item>
-                                                        </item>
-                                                    </item>
-                                                </item>
-                                            </item>
-                                        </item>
-                                    </item>
-                                </item>
-                            </item>
-                        </item>
-                    </item>
-                </argument>
-            </arguments>
-        </referenceBlock>
     </body>
 </page>

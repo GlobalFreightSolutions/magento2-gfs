@@ -9,7 +9,7 @@ use Magento\Email\Model\Template;
  *
  * @package   JustShout\Gfs
  * @author    JustShout <http://developer.justshoutgfs.com/>
- * @copyright JustShout - 2018
+ * @copyright JustShout - 2019
  */
 class Filter extends Template\Filter
 {

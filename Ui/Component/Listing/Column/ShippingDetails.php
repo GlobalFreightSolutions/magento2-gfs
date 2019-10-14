@@ -15,7 +15,7 @@ use Magento\Ui\Component\Listing\Columns\Column;
  *
  * @package   JustShout\Gfs
  * @author    JustShout <http://developer.justshoutgfs.com/>
- * @copyright JustShout - 2018
+ * @copyright JustShout - 2019
  */
 class ShippingDetails extends Column
 {
@@ -146,20 +146,26 @@ class ShippingDetails extends Column
         }
 
         $lines = [];
-        if (isset($gfsData['selectedService']['methodTitle']) && isset($gfsData['selectedService']['deliveryTimeFrom'])) {
-            $deliveryTimeFrom = $this->_gfsHelper->getGfsDate($gfsData['selectedService']['deliveryTimeFrom']);
-            $lines[] = __('<strong>Service:</strong> %1 - %2',
-                $gfsData['selectedService']['methodTitle'],
-                $deliveryTimeFrom->format('d/m/Y')
-            );
+        if (isset($gfsData['description'])) {
+            if (isset($gfsData['deliveryDate'])) {
+                $deliveryTimeFrom = $this->_gfsHelper->getGfsDate($gfsData['deliveryDate']);
+                $lines[] = __('<strong>Service:</strong> %1 - %2',
+                    $gfsData['description'],
+                    $deliveryTimeFrom->format('d/m/Y')
+                );
+            } else {
+                $lines[] = __('<strong>Service:</strong> %1',
+                    $gfsData['description']
+                );
+            }
         }
 
-        if (isset($gfsData['selectedService']['carrierName'])) {
-            $lines[] = __('<strong>Carrier:</strong> %1', $gfsData['selectedService']['carrierName']);
+        if (isset($gfsData['carrier'])) {
+            $lines[] = __('<strong>Carrier:</strong> %1', $gfsData['carrier']);
         }
 
-        if (isset($gfsData['selectedService']['carrierCode'])) {
-            $lines[] = __('<strong>Service Code:</strong> %1', $gfsData['selectedService']['carrierCode']);
+        if (isset($gfsData['serviceCode'])) {
+            $lines[] = __('<strong>Service Code:</strong> %1', $gfsData['serviceCode']);
         }
 
         return implode('<br/>', $lines);
@@ -174,29 +180,19 @@ class ShippingDetails extends Column
      */
     protected function _getGfsDetailsDropPoint($order)
     {
-        $gfsData = $this->_getGfsCloseCheckoutData($order);
-        if (!$gfsData) {
-            return '-';
-        }
-
+        $data = $this->_getGfsDropPointData($order);
         $lines = [];
-        if (isset($gfsData['selectedDroppoint']['droppointDescription'])) {
-            $lines[] = trim($gfsData['selectedDroppoint']['droppointDescription']);
+        if (isset($data['title'])) {
+            $lines[] = trim($data['title']);
         }
-        if (isset($gfsData['selectedDroppoint']['geoLocation']['addressLines'])) {
-            $lines[] = implode(', ', $gfsData['selectedDroppoint']['geoLocation']['addressLines']);
+        if (isset($data['address'])) {
+            $lines[] = implode(', ', $data['address']);
         }
-        if (isset($gfsData['selectedDroppoint']['geoLocation']['county'])) {
-            $lines[] = trim($gfsData['selectedDroppoint']['geoLocation']['county']);
+        if (isset($data['town'])) {
+            $lines[] = trim($data['town']);
         }
-        if (isset($gfsData['selectedDroppoint']['geoLocation']['town'])) {
-            $lines[] = trim($gfsData['selectedDroppoint']['geoLocation']['town']);
-        }
-        if (isset($gfsData['selectedDroppoint']['geoLocation']['postCode'])) {
-            $lines[] = trim($gfsData['selectedDroppoint']['geoLocation']['postCode']);
-        }
-        if (isset($gfsData['selectedDroppoint']['droppointId'])) {
-            $lines[] = '<strong>' . $gfsData['selectedDroppoint']['droppointId'] . '</strong>';
+        if (isset($data['zip'])) {
+            $lines[] = trim($data['zip']);
         }
 
         $html = $this->_getGfsDetailsStandard($order);
@@ -217,5 +213,17 @@ class ShippingDetails extends Column
     protected function _getGfsCloseCheckoutData($order)
     {
         return $this->_gfsHelper->getGfsCloseCheckoutData($order);
+    }
+
+    /**
+     * This method will get the data if a drop point has been used
+     *
+     * @param Order $order
+     *
+     * @return array
+     */
+    public function _getGfsDropPointData($order)
+    {
+        return $this->_gfsHelper->getGfsDropPointData($order);
     }
 }

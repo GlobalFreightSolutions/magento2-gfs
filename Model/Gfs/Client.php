@@ -13,7 +13,7 @@ use Magento\Framework\Serialize\Serializer\Json;
  *
  * @package   JustShout\Gfs
  * @author    JustShout <http://developer.justshoutgfs.com/>
- * @copyright JustShout - 2018
+ * @copyright JustShout - 2019
  */
 class Client
 {
@@ -25,7 +25,7 @@ class Client
     /**
      * Gfs Result Url
      */
-    const GFS_REST_URL = 'http://rest-checkout.justshoutgfs.com/';
+    const GFS_REST_URL = 'https://connect2.gfsdeliver.com/';
 
     /**
      * Config Helper
@@ -149,23 +149,46 @@ class Client
      * to store against the order.
      *
      * @param string $sessionId
-     * @param string $checkoutData
+     * @param string $checkoutResult
      *
      * @return array
      */
-    public function closeCheckout($sessionId, $checkoutData)
+    public function closeCheckout($sessionId, $checkoutResult)
     {
         $sessionId = base64_decode($sessionId);
         $accessToken = base64_decode($this->getAccessToken());
-        $checkoutData = $this->_json->unserialize(base64_decode($checkoutData));
+        $checkoutResult = base64_decode($checkoutResult);
+        $uri = 'api/checkout/session/' . $sessionId . '/' . $checkoutResult;
 
-        $response = $this->_restClient->request('PATCH', 'api/CheckoutSession?sessionId=' . $sessionId, [
+        $response = $this->_restClient->request('DELETE', $uri, [
             'headers' => [
                 'Accept'        => 'application/json',
                 'Content-Type'  => 'application/json',
                 'Authorization' => 'Bearer ' . $accessToken
-            ],
-            'json' => $checkoutData,
+            ]
+        ]);
+
+        $data = $this->_json->unserialize($response->getBody());
+
+        return $data;
+    }
+
+    /**
+     * Get Drop Point Details
+     *
+     * @param string $dropPointId
+     *
+     * @return array
+     */
+    public function getDropPointDetails($dropPointId)
+    {
+        $accessToken = base64_decode($this->getAccessToken());
+        $response = $this->_restClient->request('GET', 'api/droppoints/' . $dropPointId, [
+            'headers' => [
+                'Accept'        => 'application/json',
+                'Content-Type'  => 'application/json',
+                'Authorization' => 'Bearer ' . $accessToken
+            ]
         ]);
 
         $data = $this->_json->unserialize($response->getBody());

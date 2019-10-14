@@ -17,7 +17,7 @@ use Magento\Sales\Model\Order;
  *
  * @package   JustShout\Gfs
  * @author    JustShout <http://developer.justshoutgfs.com/>
- * @copyright JustShout - 2018
+ * @copyright JustShout - 2019
  */
 class SaveGfsDataToOrderObserver implements ObserverInterface
 {
@@ -83,7 +83,7 @@ class SaveGfsDataToOrderObserver implements ObserverInterface
      * This method will save the gfs data from the quote entity to the order entity when the customer places the
      * order. This method will also run a request to close checkout endpoint via the GFS api, and will save the
      * json response against the order entity so that it can be communated to the customer via the account, emails
-     * and pdfs.
+     * and pdfs. If a drop point method is being used and additional call will be made to get the points details.
      *
      * @param Observer $observer
      *
@@ -98,6 +98,18 @@ class SaveGfsDataToOrderObserver implements ObserverInterface
         $order->setGfsShippingData($quote->getGfsShippingData());
         $order->setGfsCheckoutResult($quote->getGfsCheckoutResult());
         $order->setGfsSessionId($quote->getGfsSessionId());
+
+        try {
+            $shippingData = $this->_json->unserialize($quote->getGfsShippingData());
+            if (isset($shippingData['data']['collectionPoint'])) {
+                $dropPointId = $shippingData['data']['collectionPoint'];
+                $dropPointDetails = $this->_client->getDropPointDetails($dropPointId);
+                $dropPointDetails = $this->_json->serialize($dropPointDetails);
+                $order->setGfsDropPointDetails($dropPointDetails);
+            }
+        } catch (\Exception $e) {
+            $this->_logger->info($e->getMessage());
+        }
 
         try {
             if (!$quote->getGfsSessionId()) {
@@ -129,11 +141,11 @@ class SaveGfsDataToOrderObserver implements ObserverInterface
      */
     protected function _getDespatchByDate($data)
     {
-        if (!isset($data['selectedService']['latestDespatch'])) {
+        if (!isset($data['despatchDate'])) {
             return null;
         }
 
-        $date = new \DateTime($data['selectedService']['latestDespatch']);
+        $date = new \DateTime($data['despatchDate']);
 
         return $date->format('Y-m-d H:i:s');
     }

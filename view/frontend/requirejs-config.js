@@ -1,7 +1,8 @@
 var config = {
     map: {
         '*': {
-            'Magento_Checkout/js/model/shipping-save-processor/default': 'JustShout_Gfs/js/model/shipping-save-processor/default'
+            'Magento_Checkout/js/model/shipping-save-processor/default': 'JustShout_Gfs/js/model/shipping-save-processor/default',
+            'gfsAsync' : 'JustShout_Gfs/js/async'
         }
     },
     config: {

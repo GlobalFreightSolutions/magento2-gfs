@@ -14,7 +14,7 @@ use Magento\Store\Model\ScopeInterface;
  *
  * @package   JustShout\Gfs
  * @author    JustShout <http://developer.justshoutgfs.com/>
- * @copyright JustShout - 2018
+ * @copyright JustShout - 2019
  */
 class Config extends Data
 {
@@ -117,6 +117,16 @@ class Config extends Data
      * Get Service Sort Order
      */
     const CONFIG_SERVICE_SORT_ORDER = 'carriers/gfs/service_sort_order';
+
+    /**
+     * Date Range
+     */
+    const CONFIG_DATE_RANGE = 'carriers/gfs/date_range';
+
+    /**
+     * Get Map API Key
+     */
+    const CONFIG_MAP_API_KEY = 'carriers/gfs/map_api_key';
 
     /**
      * Get Map Icon
@@ -531,6 +541,26 @@ class Config extends Data
     public function getServiceSortOrder()
     {
         return $this->scopeConfig->getValue(self::CONFIG_SERVICE_SORT_ORDER, ScopeInterface::SCOPE_STORE);
+    }
+
+    /**
+     * Get Request Date Range
+     *
+     * @return int
+     */
+    public function getDateRange()
+    {
+        return (int) $this->scopeConfig->getValue(self::CONFIG_DATE_RANGE,ScopeInterface::SCOPE_STORE);
+    }
+
+    /**
+     * Get Map Api Key
+     *
+     * @return string
+     */
+    public function getMapApiKey()
+    {
+        return $this->scopeConfig->getValue(self::CONFIG_MAP_API_KEY,  ScopeInterface::SCOPE_STORE);
     }
 
     /**

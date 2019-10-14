@@ -12,7 +12,7 @@ use Magento\Sales\Model\Order;
  *
  * @package   JustShout\Gfs
  * @author    JustShout <http://developer.justshoutgfs.com/>
- * @copyright JustShout - 2018
+ * @copyright JustShout - 2019
  */
 class Data extends AbstractHelper
 {
@@ -79,6 +79,28 @@ class Data extends AbstractHelper
         }
 
         return $gfsShippingData;
+    }
+
+    /**
+     * This method will get the gfs drop point details stored against the order entity
+     *
+     * @param Order $order
+     *
+     * @return array
+     */
+    public function getGfsDropPointData(Order $order)
+    {
+        try {
+            $gfsDropPointDetails = $order->getData('gfs_drop_point_details');
+            if (!$gfsDropPointDetails) {
+                throw new \Exception();
+            }
+            $gfsDropPointDetails = $this->_json->unserialize($gfsDropPointDetails);
+        } catch (\Exception $e) {
+            $gfsDropPointDetails = [];
+        }
+
+        return $gfsDropPointDetails;
     }
 
     /**

@@ -14,7 +14,7 @@ use Magento\Sales\Model\Order;
  *
  * @package   JustShout\Gfs
  * @author    JustShout <http://developer.justshoutgfs.com/>
- * @copyright JustShout - 2018
+ * @copyright JustShout - 2019
  */
 class Gfs extends AbstractOrder
 {
@@ -31,6 +31,13 @@ class Gfs extends AbstractOrder
      * @var array
      */
     protected $_gfsCloseCheckoutData;
+
+    /**
+     * GFS Drop Point Data
+     *
+     * @var array
+     */
+    protected $_gfsDropPointData;
 
     /**
      * Order Entity
@@ -113,6 +120,20 @@ class Gfs extends AbstractOrder
     }
 
     /**
+     * This method will get the data if a drop point has been used
+     *
+     * @return array
+     */
+    public function getGfsDropPointData()
+    {
+        if (!$this->_gfsDropPointData) {
+            $this->_gfsDropPointData = $this->_gfsHelper->getGfsDropPointData($this->getOrder());
+        }
+
+        return $this->_gfsDropPointData;
+    }
+
+    /**
      * Get the service name for standard deliveries
      *
      * @return string
@@ -120,13 +141,27 @@ class Gfs extends AbstractOrder
     public function getServiceTitle()
     {
         $data = $this->getGfsCloseCheckoutData();
-        $service = trim($data['selectedService']['methodTitle']);
-        if (isset($data['selectedService']['deliveryTimeFrom'])) {
-            $deliveryDate = $this->_gfsHelper->getGfsDate($data['selectedService']['deliveryTimeFrom']);
+        $service = trim($data['description']);
+        if (isset($data['deliveryDate'])) {
+            $deliveryDate = $this->_gfsHelper->getGfsDate($data['deliveryDate']);
             $service .= ' - ' . $deliveryDate->format('d/m/Y');
         }
 
         return $service;
+    }
+
+    /**
+     * Get Drop Point Id
+     */
+    public function getDroppointId()
+    {
+        $id = null;
+        $data = $this->getGfsCloseCheckoutData();
+        if (isset($data['dropPoint'])) {
+            $id = $data['dropPoint'];
+        }
+
+        return $id;
     }
 
     /**
@@ -138,8 +173,8 @@ class Gfs extends AbstractOrder
     {
         $carrier = null;
         $data = $this->getGfsCloseCheckoutData();
-        if (isset($data['selectedService']['carrierName'])) {
-            $carrier = $data['selectedService']['carrierName'];
+        if (isset($data['carrier'])) {
+            $carrier = $data['carrier'];
         }
 
         return $carrier;
@@ -154,8 +189,8 @@ class Gfs extends AbstractOrder
     {
         $carrier = null;
         $data = $this->getGfsCloseCheckoutData();
-        if (isset($data['selectedService']['carrierCode'])) {
-            $carrier = $data['selectedService']['carrierCode'];
+        if (isset($data['serviceCode'])) {
+            $carrier = $data['serviceCode'];
         }
 
         return $carrier;
@@ -182,21 +217,21 @@ class Gfs extends AbstractOrder
     }
 
     /**
-     * Get Latest Despatch
+     * Get Despatch Date
      *
      * @return string
      */
-    public function getLatestDespatch()
+    public function getDespatchDate()
     {
         $data = $this->getGfsCloseCheckoutData();
-        if (!isset($data['selectedService']['latestDespatch'])) {
+        if (!isset($data['despatchDate'])) {
             return null;
         }
 
-        $latestDepatch = $this->_gfsHelper->getGfsDate($data['selectedService']['latestDespatch']);
+        $dispatchDate = $this->_gfsHelper->getGfsDate($data['despatchDate']);
 
         return __('<strong>Despatch by:</strong> %1',
-            $latestDepatch->format('d/m/Y')
+            $dispatchDate->format('d/m/Y')
         );
     }
 
@@ -207,41 +242,22 @@ class Gfs extends AbstractOrder
      */
     public function getDropPointServiceAddress()
     {
-        $data = $this->getGfsCloseCheckoutData();
-        $dropPointId = $this->getDropPointId();
+        $data = $this->getGfsDropPointData();
         $lines = [];
-        if (isset($data['selectedDroppoint']['droppointDescription'])) {
-            $description = trim($data['selectedDroppoint']['droppointDescription']);
-            $description .= $dropPointId ? '<strong>' . $dropPointId . '</strong>' : null;
-            $lines[] = $description;
+        if (isset($data['title'])) {
+            $lines[] = trim($data['title']);
         }
-        if (isset($data['selectedDroppoint']['geoLocation']['addressLines'])) {
-            $lines[] = implode(', ', $data['selectedDroppoint']['geoLocation']['addressLines']);
+        if (isset($data['address'])) {
+            $lines[] = implode(', ', $data['address']);
         }
-        if (isset($data['selectedDroppoint']['geoLocation']['county'])) {
-            $lines[] = trim($data['selectedDroppoint']['geoLocation']['county']);
+        if (isset($data['town'])) {
+            $lines[] = trim($data['town']);
         }
-        if (isset($data['selectedDroppoint']['geoLocation']['town'])) {
-            $lines[] = trim($data['selectedDroppoint']['geoLocation']['town']);
-        }
-        if (isset($data['selectedDroppoint']['geoLocation']['postCode'])) {
-            $lines[] = trim($data['selectedDroppoint']['geoLocation']['postCode']);
+        if (isset($data['zip'])) {
+            $lines[] = trim($data['zip']);
         }
 
         return implode('<br/>', $lines);
-    }
-
-    /**
-     * Get Drop Point Id
-     *
-     * @return string
-     */
-    public function getDropPointId()
-    {
-        $data = $this->getGfsCloseCheckoutData();
-        $dropPointId = isset($data['selectedDroppoint']['droppointId']) ? $data['selectedDroppoint']['droppointId'] : null;
-
-        return trim($dropPointId);
     }
 
     /**

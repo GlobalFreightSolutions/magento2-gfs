@@ -11,7 +11,7 @@ use Magento\Sales\Model\Order\Pdf;
  *
  * @package   JustShout\Gfs
  * @author    JustShout <http://developer.justshoutgfs.com/>
- * @copyright JustShout - 2018
+ * @copyright JustShout - 2019
  */
 class ShipmentPlugin
 {

@@ -5,6 +5,7 @@ namespace JustShout\Gfs\Block\Html;
 use JustShout\Gfs\Helper\Config;
 use JustShout\Gfs\Model\Gfs\Client;
 use Magento\Directory\Model\Currency;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\View\Element\Template;
 
 /**
@@ -12,7 +13,7 @@ use Magento\Framework\View\Element\Template;
  *
  * @package   JustShout\Gfs
  * @author    JustShout <http://developer.justshoutgfs.com/>
- * @copyright JustShout - 2018
+ * @copyright JustShout - 2019
  */
 class Head extends Template
 {
@@ -31,22 +32,30 @@ class Head extends Template
     protected $_config;
 
     /**
+     * @var Json
+     */
+    protected $_json;
+
+    /**
      * Head constructor
      *
      * @param Template\Context $context
      * @param Client           $client
      * @param Config           $config
+     * @param Json             $json
      * @param array            $data
      */
     public function __construct(
         Template\Context $context,
         Client           $client,
         Config           $config,
+        Json             $json,
         array            $data = []
     ) {
         parent::__construct($context, $data);
         $this->_client = $client;
         $this->_config = $config;
+        $this->_json = $json;
     }
 
     /**
@@ -129,6 +138,16 @@ class Head extends Template
     }
 
     /**
+     * Get Map Api Key
+     *
+     * @return string
+     */
+    public function getMapApiKey()
+    {
+        return $this->_config->getMapApiKey();
+    }
+
+    /**
      * Get Map Home Icon
      *
      * @return string
@@ -137,7 +156,6 @@ class Head extends Template
     {
         return $this->_config->getMapHomeIcon();
     }
-
 
     /**
      * Get Use Stores
@@ -222,11 +240,17 @@ class Head extends Template
     /**
      * Get Default Price
      *
-     * @return float
+     * @return string
      */
     public function getDefaultPrice()
     {
-        return $this->_config->getDefaultPrice();
+        /** @var Currency $currency */
+        $currency = $this->_storeManager->getStore()->getCurrentCurrency();
+
+        return $this->_json->serialize([
+            'currency' => $currency->getCode(),
+            'price'    => $this->_config->getDefaultPrice()
+        ]);
     }
 
     /**

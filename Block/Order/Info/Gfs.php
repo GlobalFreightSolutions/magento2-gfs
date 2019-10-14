@@ -11,7 +11,7 @@ use Magento\Sales\Model\Order;
  *
  * @package   JustShout\Gfs
  * @author    JustShout <http://developer.justshoutgfs.com/>
- * @copyright JustShout - 2018
+ * @copyright JustShout - 2019
  */
 class Gfs extends Template
 {
@@ -35,6 +35,13 @@ class Gfs extends Template
      * @var array
      */
     protected $_gfsCloseCheckoutData;
+
+    /**
+     * GFS Drop Point Data
+     *
+     * @var array
+     */
+    protected $_gfsDropPointData;
 
     /**
      * Gfs constructor
@@ -91,6 +98,20 @@ class Gfs extends Template
     }
 
     /**
+     * This method will get the data if a drop point has been used
+     *
+     * @return array
+     */
+    public function getGfsDropPointData()
+    {
+        if (!$this->_gfsDropPointData) {
+            $this->_gfsDropPointData = $this->_gfsHelper->getGfsDropPointData($this->getOrder());
+        }
+
+        return $this->_gfsDropPointData;
+    }
+
+    /**
      * Get the service title
      *
      * @return string
@@ -98,33 +119,13 @@ class Gfs extends Template
     public function getServiceTitle()
     {
         $data = $this->getGfsCloseCheckoutData();
-        $service = trim($data['selectedService']['methodTitle']);
-        if (isset($data['selectedService']['deliveryTimeFrom'])) {
-            $deliveryDate = $this->_gfsHelper->getGfsDate($data['selectedService']['deliveryTimeFrom']);
+        $service = trim($data['description']);
+        if (isset($data['deliveryDate'])) {
+            $deliveryDate = $this->_gfsHelper->getGfsDate($data['deliveryDate']);
             $service .= ' - ' . $deliveryDate->format('d/m/Y');
         }
 
         return $service;
-    }
-
-    /**
-     * Get the estimated delivery time for standard deliveries
-     *
-     * @return string
-     */
-    public function getServiceTime()
-    {
-        $data = $this->getGfsCloseCheckoutData();
-        if (!isset($data['selectedService']['deliveryTimeFrom']) || !isset($data['selectedService']['deliveryTimeTo'])) {
-            return null;
-        }
-        $deliveryTimeFrom = $this->_gfsHelper->getGfsDate($data['selectedService']['deliveryTimeFrom']);
-        $deliveryTimeTo = $this->_gfsHelper->getGfsDate($data['selectedService']['deliveryTimeTo']);
-
-        return __('Delivery Between %1 - %2',
-            $deliveryTimeFrom->format('g:sa'),
-            $deliveryTimeTo->format('g:sa')
-        );
     }
 
     /**
@@ -134,22 +135,19 @@ class Gfs extends Template
      */
     public function getDropPointAddress()
     {
-        $data = $this->getGfsCloseCheckoutData();
+        $data = $this->getGfsDropPointData();
         $lines = [];
-        if (isset($data['selectedDroppoint']['droppointDescription'])) {
-            $lines[] = trim($data['selectedDroppoint']['droppointDescription']);
+        if (isset($data['title'])) {
+            $lines[] = trim($data['title']);
         }
-        if (isset($data['selectedDroppoint']['geoLocation']['addressLines'])) {
-            $lines[] = implode(', ', $data['selectedDroppoint']['geoLocation']['addressLines']);
+        if (isset($data['address'])) {
+            $lines[] = implode(', ', $data['address']);
         }
-        if (isset($data['selectedDroppoint']['geoLocation']['county'])) {
-            $lines[] = trim($data['selectedDroppoint']['geoLocation']['county']);
+        if (isset($data['town'])) {
+            $lines[] = trim($data['town']);
         }
-        if (isset($data['selectedDroppoint']['geoLocation']['town'])) {
-            $lines[] = trim($data['selectedDroppoint']['geoLocation']['town']);
-        }
-        if (isset($data['selectedDroppoint']['geoLocation']['postCode'])) {
-            $lines[] = trim($data['selectedDroppoint']['geoLocation']['postCode']);
+        if (isset($data['zip'])) {
+            $lines[] = trim($data['zip']);
         }
 
         return implode('<br/>', $lines);
@@ -162,22 +160,22 @@ class Gfs extends Template
      */
     public function getDropPointOpeningTimes()
     {
-        $data = $this->getGfsCloseCheckoutData();
+        $data = $this->getGfsDropPointData();
         $times = [];
-        if (!isset($data['selectedDroppoint']['collectionSlots'])) {
+        if (!isset($data['days'])) {
             return $times;
         }
 
         for ($d = 0; $d < 7; $d++) {
-            if (!isset($data['selectedDroppoint']['collectionSlots'][$d])) {
+            if (!isset($data['days'][$d])) {
                 continue;
             }
-            $day = $data['selectedDroppoint']['collectionSlots'][$d];
-            $dayName = $this->_gfsHelper->getGfsDate($day['collectionDate']);
+            $day = $data['days'][$d];
+            $dayName = $this->_gfsHelper->getGfsDate($day['dayOfWeek']);
             $times[$dayName->format('N')] = [
                 'day'  => $dayName->format('D'),
-                'from' => $day['timeSlots'][0]['from'],
-                'to'   => $day['timeSlots'][0]['to']
+                'from' => $day['slots'][0]['from'],
+                'to'   => $day['slots'][0]['to']
             ];
         }
 

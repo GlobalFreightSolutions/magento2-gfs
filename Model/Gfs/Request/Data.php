@@ -22,7 +22,7 @@ use Magento\Store\Model\StoreManagerInterface;
  *
  * @package   JustShout\Gfs
  * @author    JustShout <http://developer.justshoutgfs.com/>
- * @copyright JustShout - 2018
+ * @copyright JustShout - 2019
  */
 class Data
 {
@@ -85,25 +85,26 @@ class Data
     /**
      * Data constructor
      *
-     * @param Config                $config
-     * @param Session               $checkoutSession
-     * @param ProductFactory        $productFactory
-     * @param CustomerFactory       $customerFactory
+     * @param Config $config
+     * @param Session $checkoutSession
+     * @param ProductFactory $productFactory
+     * @param CustomerFactory $customerFactory
      * @param StoreManagerInterface $storeManager
-     * @param CountryFactory        $countryFactory
-     * @param Json                  $json
-     * @param Cookie\Address        $addressCookie
+     * @param CountryFactory $countryFactory
+     * @param Json $json
+     * @param Cookie\Address $addressCookie
      */
     public function __construct(
-        Config                $config,
-        Session               $checkoutSession,
-        ProductFactory        $productFactory,
-        CustomerFactory       $customerFactory,
+        Config $config,
+        Session $checkoutSession,
+        ProductFactory $productFactory,
+        CustomerFactory $customerFactory,
         StoreManagerInterface $storeManager,
-        CountryFactory        $countryFactory,
-        Json                  $json,
-        Cookie\Address        $addressCookie
-    ) {
+        CountryFactory $countryFactory,
+        Json $json,
+        Cookie\Address $addressCookie
+    )
+    {
         $this->_config = $config;
         $this->_checkoutSession = $checkoutSession;
         $this->_productFactory = $productFactory;
@@ -122,17 +123,16 @@ class Data
     public function getGfsData()
     {
         $data = [];
+        $request = [];
         $quote = $this->getQuote();
         if (!$quote->getId() || !$this->_getQuoteAddress()->hasData()) {
             return $data;
         }
 
-        $data['Request']['DateRange'] = $this->getDateRange();
-        $data['Request']['Order'] = $this->getOrderData();
-        $data['Request']['RequestedDeliveryTypes'] = $this->getRequestedDeliveryTypes();
-        $data['Request']['Session'] = [];
+        $request['options'] = $this->_getOptions();
+        $request['order'] = $this->_getOrder();
 
-        return $data;
+        return $request;
     }
 
     /**
@@ -163,61 +163,113 @@ class Data
     }
 
     /**
-     * This method will set the date range of the request object
+     * Get Request Options
      *
      * @return array
      */
-    public function getDateRange()
+    protected function _getOptions()
     {
         $date = new \DateTime();
+        $quote = $this->getQuote();
+        $range = $this->_getDateRange();
 
         return [
-            'DateFrom' => $date->format('Y-m-d'),
-            'DateTo'   => $date->modify('+14 day')->format('Y-m-d'),
+            'startDate' => $date->format('Y-m-d'),
+            'endDate'   => $date->modify('+' . $range . ' day')->format('Y-m-d'),
+            'currency'  => $quote->getQuoteCurrencyCode(),
+            'droppoints' => [
+                'max'    => 50,
+                'radius' => 50000,
+            ],
+            'stores' => [
+                'max'    => 50,
+                'radius' => 5000,
+            ],
         ];
     }
 
     /**
-     * This method will get the data that is set the order object
+     * Get Request Order
      *
      * @return array
      */
-    public function getOrderData()
+    protected function _getOrder()
     {
-        $data = [];
-        $data['Contents'] = $this->getOrderContents();
-        $data['Transit'] = $this->getOrderTransit();
-        $data['Shipper'] = $this->getOrderShipper();
-        $data['Value'] = $this->getOrderValue();
-        switch ($this->_config->getWeightUnit()) {
-            case 'lbs':
-                $data['imperialDimensions'] = $this->getOrderImperialDimensions();
-                break;
-            default:
-                $data['MetricDimensions'] = $this->getOrderMetricDimensions();
+        $order = [];
+        $quote = $this->getQuote();
+
+        $order['delivery'] = $this->_getOrderDelivery();
+        $order['packs'] = $this->_getOrderPacks();
+        $order['price'] = $quote->getSubtotal();
+        $order['items'] = $this->_getOrderItems();
+
+        $customFields = $this->_getOrderCustomFields();
+        if ($customFields) {
+            $order['additional'] = $customFields;
         }
 
-        return $data;
+        return $order;
     }
 
     /**
-     * This method will get the order object that stores the items from the order
+     * Get Delivery Details
      *
      * @return array
      */
-    public function getOrderContents()
+    protected function _getOrderDelivery()
+    {
+        $data = [];
+        $address = $this->_getQuoteAddress();
+
+        $data['street'] =  str_replace("\n", ',', $address->getStreet());
+        $data['city'] = $address->getCity();
+        if ($address->getRegion()) {
+            $data['state'] = $address->getRegion();
+        } else if ($address->getRegionCode()) {
+            $data['state'] = $address->getRegionCode();
+        }
+
+        $data['zip'] = $address->getPostcode();
+        $data['country'] = $address->getCountryId();
+
+        return [
+            'origin' => $data,
+            'destination' => $data,
+        ];
+    }
+
+    /**
+     * Get Order Packs
+     *
+     * @return int
+     */
+    protected function _getOrderPacks()
+    {
+        $packs = 0;
+        $quote = $this->getQuote();
+        foreach ($quote->getAllVisibleItems() as $item) {
+            $packs += (int) $item->getQty();
+        }
+
+        return $packs;
+    }
+
+    /**
+     * Get Order Items
+     *
+     * @return array
+     */
+    protected function _getOrderItems()
     {
         $items = [];
         $quote = $this->getQuote();
         foreach ($quote->getAllVisibleItems() as $item) {
             $itemData = [
                 'Description' => $item->getName(),
-                'ItemValue'   => [
-                    'CurrencyCode' => $quote->getQuoteCurrencyCode(),
-                    'Value'        => (float) $item->getPriceInclTax()
-                ],
+                'price'       => (float) $item->getPriceInclTax(),
                 'ProductCode' => $item->getSku(),
-                'Quantity'    => $item->getQty()
+                'sku'         => $item->getSku(),
+                'quantity'    => $item->getQty(),
             ];
             $dimensions = $this->_getItemDimensions($item);
             if (!empty($dimensions)) {
@@ -225,127 +277,12 @@ class Data
             }
             $customFields = $this->_getItemCustomFields($item);
             if (!empty($customFields)) {
-                $itemData['customItemFields'] = $customFields;
+                $itemData['additionalData'] = $customFields;
             }
             $items[] = $itemData;
         }
 
         return $items;
-    }
-
-    /**
-     * This method will populate the gfs data object with the shipping address and customer details
-     *
-     * @return array
-     */
-    public function getOrderTransit()
-    {
-        $data = [];
-        $quote = $this->getQuote();
-        $shippingAddress = $this->_getQuoteAddress();
-
-        $data['Recipient']['ContactDetails']['Email'] = $quote->getCustomerEmail();
-        $data['Recipient']['Location']['AddressLineCollection'] = explode("\n", $shippingAddress->getStreet());
-        $data['Recipient']['Location']['CountryCode']['Code'] = $shippingAddress->getCountryId();
-        $data['Recipient']['Location']['CountryCode']['Encoding'] = 'ccISO_3166_1_Alpha2';
-        $data['Recipient']['Location']['Postcode'] = $shippingAddress->getPostcode();
-        $data['Recipient']['Location']['Town'] = $shippingAddress->getCity();
-        $data['Recipient']['Person']['FirstName'] = $shippingAddress->getFirstname();
-        $data['Recipient']['Person']['LastName'] = $shippingAddress->getLastname();
-        $data['Recipient']['Person']['Title'] = $shippingAddress->getPrefix() ? $shippingAddress->getPrefix() : 'Mr';
-
-        return $data;
-    }
-
-    /**
-     * This method will populate the gfs data object for the shipper
-     *
-     * @return array
-     */
-    public function getOrderShipper()
-    {
-        $data = [];
-        $quote = $this->getQuote();
-        $shippingAddress = $this->_getQuoteAddress();
-
-        $data['ContactDetails']['Email'] = $quote->getCustomerEmail();
-        $data['Location']['AddressLineCollection'] = explode("\n", $shippingAddress->getStreet());
-        $data['Location']['CountryCode']['Code'] = $shippingAddress->getCountryId();
-        $data['Location']['CountryCode']['Encoding'] = 'ccISO_3166_1_Alpha2';
-        $data['Location']['Postcode'] = $shippingAddress->getPostcode();
-        $data['Location']['Town'] = $shippingAddress->getCity();
-        $data['Person']['FirstName'] = $shippingAddress->getFirstname();
-        $data['Person']['LastName'] = $shippingAddress->getLastname();
-        $data['Person']['Title'] = $shippingAddress->getPrefix() ? $shippingAddress->getPrefix() : 'Mr';
-
-        return $data;
-    }
-
-    /**
-     * This method will populate the gfs data object with the order totals
-     *
-     * @return array
-     */
-    public function getOrderValue()
-    {
-        $quote = $this->getQuote();
-
-        return [
-            'CurrencyCode' => $quote->getQuoteCurrencyCode(),
-            'Value'        => (float) $quote->getSubtotalWithDiscount()
-        ];
-    }
-
-    /**
-     * Get Order Imperial Dimensions
-     *
-     * @return array
-     */
-    public function getOrderImperialDimensions()
-    {
-        $quote = $this->getQuote();
-        $weight = 0;
-        foreach ($quote->getAllVisibleItems() as $item) {
-            $weight += (float) $item->getWeight();
-        }
-
-        return [
-            'weight' => [
-                'pounds' => $weight,
-                'ounces' => (float) ($weight * 16),
-            ]
-        ];
-    }
-
-    /**
-     * Get Order Metric Dimensions
-     *
-     * @return array
-     */
-    public function getOrderMetricDimensions()
-    {
-        $quote = $this->getQuote();
-        $weight = 0;
-        foreach ($quote->getAllVisibleItems() as $item) {
-            $weight += (float) $item->getWeight();
-        }
-
-        return [
-            'weight' => [
-                'scale' => 'wiKilograms',
-                'value' => $weight,
-            ],
-        ];
-    }
-
-    /**
-     * This method gets the delivery types that are enabled to use
-     *
-     * @return array
-     */
-    public function getRequestedDeliveryTypes()
-    {
-        return $this->_config->getDeliveryTypes();
     }
 
     /**
@@ -362,7 +299,7 @@ class Data
      * When using the checkout, the shipping address is not saved to the quote when initially going through
      * so the address is stored in the checkout session.
      *
-     * @return DataObject
+     * @return DataObject|Quote\Address
      */
     protected function _getQuoteAddress()
     {
@@ -391,92 +328,30 @@ class Data
             return [];
         }
 
-        switch ($this->_config->getWeightUnit()) {
-            case 'kgs':
-                return $this->_getItemDimensionsMetric($item);
-                break;
-            case 'lbs':
-                return $this->_getItemDimensionsImperial($item);
-                break;
-            default:
-                return [];
-        }
-    }
-
-    /**
-     * Get the dimensions if the store is set to metric (kgs)
-     *
-     * @param Quote\Item $item
-     *
-     * @return array
-     */
-    protected function _getItemDimensionsMetric($item)
-    {
         $dimensions = [
-            'metricDimensions' => [
-                'weight' => [
-                    'scale' => 'wiKilograms',
-                    'value' => (float) $item->getWeight(),
-                ],
+            'weight' => [
+                'unit'  => 'kg',
+                'value' => $weight,
             ],
         ];
 
         $height = $this->_getItemHeight($item);
         if ($height) {
-            $dimensions['metricDimensions']['height'] = $height;
+            $dimensions['dimensions']['height'] = $height;
         }
 
         $width = $this->_getItemWidth($item);
         if ($width) {
-            $dimensions['metricDimensions']['width'] = $width;
+            $dimensions['dimensions']['width'] = $width;
         }
 
         $length = $this->_getItemLength($item);
         if ($length) {
-            $dimensions['metricDimensions']['length'] = $length;
+            $dimensions['dimensions']['length'] = $length;
         }
 
         if ($height || $width || $length) {
-            $dimensions['metricDimensions']['scale'] = $this->_config->getMetricDimensionUnit();
-        }
-
-        return $dimensions;
-    }
-
-    /**
-     * Get the dimensions if the store is set to imperial (lbs)
-     *
-     * @param Quote\Item $item
-     *
-     * @return array
-     */
-    protected function _getItemDimensionsImperial($item)
-    {
-        $dimensions = [
-            'imperialDimensions' => [
-                'weight' => [
-                    'pounds' => (float) $item->getWeight(),
-                    'ounces' => (float) ($item->getWeight() * 16),
-                ],
-            ],
-        ];
-
-        $height = $this->_getItemHeight($item);
-        if ($height) {
-            $dimensions['imperialDimensions']['height']['inches'] = $height;
-            $dimensions['imperialDimensions']['height']['sixteenths'] = $height * 16;
-        }
-
-        $width = $this->_getItemWidth($item);
-        if ($width) {
-            $dimensions['imperialDimensions']['width']['inches'] = $width;
-            $dimensions['imperialDimensions']['width']['sixteenths'] = $width * 16;
-        }
-
-        $length = $this->_getItemLength($item);
-        if ($length) {
-            $dimensions['imperialDimensions']['length']['inches'] = $length;
-            $dimensions['imperialDimensions']['length']['sixteenths'] = $length * 16;
+            $dimensions['dimensions']['unit'] = $this->_config->getMetricDimensionUnit();
         }
 
         return $dimensions;
@@ -561,9 +436,8 @@ class Data
             }
 
             $fields[] = [
-                'FieldName'  => $fieldNumber,
-                'FieldType'  => $type,
-                'FieldValue' => $value,
+                'name'  => $fieldNumber,
+                'value' => $value
             ];
 
             $fieldNumber++;
@@ -651,9 +525,8 @@ class Data
             }
 
             $fields[] = [
-                'FieldName'  => $fieldNumber,
-                'FieldType'  => $type,
-                'FieldValue' => $value,
+                'name'  => $fieldNumber,
+                'value' => $value
             ];
 
             $fieldNumber++;
@@ -747,6 +620,25 @@ class Data
         }
 
         return $value;
+    }
+
+    /**
+     * Get Date Range
+     *
+     * @return int
+     */
+    protected function _getDateRange()
+    {
+        $range = $this->_config->getDateRange();
+        if (!$range || $range < 14) {
+            $range = 14;
+        }
+
+        if ($range > 179) {
+            $range = 179;
+        }
+
+        return $range;
     }
 
     /**

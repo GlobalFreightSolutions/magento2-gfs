@@ -3,4 +3,11 @@
     <type name="Magento\Sales\Block\Order\Info">
         <plugin name="setGfsShippingDescription" type="JustShout\Gfs\Plugin\Sales\Block\Order\InfoPlugin"/>
     </type>
+    <type name="Magento\Checkout\Block\Onepage">
+        <arguments>
+            <argument name="layoutProcessors" xsi:type="array">
+                <item name="gfsProcessor" xsi:type="object">JustShout\Gfs\Block\Checkout\GfsProcessor</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

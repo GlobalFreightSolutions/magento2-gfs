@@ -7,7 +7,8 @@ define([
     'Magento_Checkout/js/model/shipping-service',
     'Magento_Checkout/js/model/shipping-rate-registry',
     'mage/template',
-    'mage/storage'
+    'mage/storage',
+    'gfsAsync!https://maps.googleapis.com/maps/api/js?key=' + gfsGoogleMapsApiKey + '&libraries=places'
 ], function (
     $,
     _,
@@ -74,6 +75,7 @@ define([
         addGfsCheckoutComponent: function ()
         {
             var self = this;
+            $('#checkout-step-shipping_method .table-checkout-shipping-method').hide();
             this.removeGfsCheckoutComponent();
             this.triggerProcessStart();
             storage.get('gfs/data/generate').done(function (response) {

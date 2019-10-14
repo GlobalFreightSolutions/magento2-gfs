@@ -24,7 +24,7 @@ use Psr\Log\LoggerInterface;
  *
  * @package   JustShout\Gfs
  * @author    JustShout <http://developer.justshoutgfs.com/>
- * @copyright JustShout - 2018
+ * @copyright JustShout - 2019
  */
 class Gfs extends AbstractCarrier implements CarrierInterface
 {
@@ -260,8 +260,8 @@ class Gfs extends AbstractCarrier implements CarrierInterface
             return $price;
         }
 
-        if (isset($data['shipping'])) {
-            $price = (float) $data['shipping'];
+        if (isset($data['data']['shipping']['price'])) {
+            $price = (float) $data['data']['shipping']['price'];
         }
 
         return $price;
@@ -311,13 +311,13 @@ class Gfs extends AbstractCarrier implements CarrierInterface
     protected function _getMethodTitleStandard($data)
     {
         $methodTitleSegments = [];
-        if (isset($data['service']) && trim($data['service']) !== '') {
-            $methodTitleSegments[] = trim($data['service']);
+        if (isset($data['data']['service']) && trim($data['data']['service']) !== '') {
+            $methodTitleSegments[] = trim($data['data']['service']);
         }
 
-        if (isset($data['expDeliveryDateStart']) && isset($data['expDeliveryDateEnd'])) {
-            $deliveryDateStart = $this->_config->getGfsDate($data['expDeliveryDateStart']);
-            $deliveryDateEnd = $this->_config->getGfsDate($data['expDeliveryDateEnd']);
+        if (isset($data['data']['expDeliveryDateStart']) && isset($data['data']['expDeliveryDateEnd'])) {
+            $deliveryDateStart = $this->_config->getGfsDate($data['data']['expDeliveryDateStart']);
+            $deliveryDateEnd = $this->_config->getGfsDate($data['data']['expDeliveryDateEnd']);
             $methodTitleSegments[] = sprintf('%s - %s',
                 $deliveryDateStart->format('d/m/Y g:sa'),
                 $deliveryDateEnd->format('g:sa'));
@@ -336,17 +336,16 @@ class Gfs extends AbstractCarrier implements CarrierInterface
     protected function _getMethodTitleCalendar($data)
     {
         $methodTitleSegments = [];
-        if (isset($data['service']) && trim($data['service']) !== '') {
-            $methodTitleSegments[] = trim($data['service']);
+        if (isset($data['data']['service']) && trim($data['data']['service']) !== '') {
+            $methodTitleSegments[] = trim($data['data']['service']);
         }
 
-        if (isset($data['expDeliveryDateStart']) && isset($data['expDeliveryDateEnd'])) {
-            $deliveryDateStart = $this->_config->getGfsDate($data['expDeliveryDateStart']);
-            $deliveryDateEnd = $this->_config->getGfsDate($data['expDeliveryDateEnd']);
+        if (isset($data['data']['expDeliveryDateStart']) && isset($data['data']['expDeliveryDateEnd'])) {
+            $deliveryDateStart = $this->_config->getGfsDate($data['data']['expDeliveryDateStart']);
+            $deliveryDateEnd = $this->_config->getGfsDate($data['data']['expDeliveryDateEnd']);
             $methodTitleSegments[] = sprintf('%s - %s',
                 $deliveryDateStart->format('d/m/Y g:sa'),
-                $deliveryDateEnd->format('g:sa')
-            );
+                $deliveryDateEnd->format('g:sa'));
         }
 
         return implode(', ', $methodTitleSegments);
@@ -363,30 +362,22 @@ class Gfs extends AbstractCarrier implements CarrierInterface
     protected function _getMethodTitleDropPoint($data)
     {
         $methodTitleSegments = [];
-        if (isset($data['service']) && trim($data['service']) !== '') {
-            $methodTitleSegments[] = trim($data['service']);
+        if (isset($data['data']['service']) && trim($data['data']['service']) !== '') {
+            $methodTitleSegments[] = trim($data['data']['service']);
         }
 
-        if (isset($data['expDeliveryDateStart']) && isset($data['expDeliveryDateEnd'])) {
-            $deliveryDateStart = $this->_config->getGfsDate($data['expDeliveryDateStart']);
-            $deliveryDateEnd = $this->_config->getGfsDate($data['expDeliveryDateEnd']);
+        if (isset($data['data']['expDeliveryDateStart']) && isset($data['data']['expDeliveryDateEnd'])) {
+            $deliveryDateStart = $this->_config->getGfsDate($data['data']['expDeliveryDateStart']);
+            $deliveryDateEnd = $this->_config->getGfsDate($data['data']['expDeliveryDateEnd']);
             $methodTitleSegments[] = sprintf('%s - %s',
                 $deliveryDateStart->format('d/m/Y g:sa'),
-                $deliveryDateEnd->format('g:sa')
-            );
+                $deliveryDateEnd->format('g:sa'));
         }
 
         $methodTitle = implode(', ', $methodTitleSegments);
 
-        if (isset($data['deliveryAddress'])) {
-            $addressSegments = [];
-            $addressSegments[] = $data['deliveryAddress']['directions'];
-            if (!empty($data['deliveryAddress']['addressLines'])) {
-                $addressSegments[] = implode(', ', $data['deliveryAddress']['addressLines']);
-            }
-            $addressSegments[] = $data['deliveryAddress']['town'];
-            $addressSegments[] = $data['deliveryAddress']['postCode'];
-            $methodTitle .= ' - ' . implode(', ', $addressSegments);
+        if (isset($data['data']['deliveryAddress'])) {
+            $methodTitle .= ' - ' . implode(', ', array_filter($data['data']['deliveryAddress']));
         }
 
         return $methodTitle;

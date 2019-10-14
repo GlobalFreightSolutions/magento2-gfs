@@ -1,6 +1,7 @@
 <?php /** @var \JustShout\Gfs\Block\Html\Head $block */ ?>
 
 <script>
+    var gfsGoogleMapsApiKey = '<?= $block->getMapApiKey() ?>';
     var gfsData = {
         'accessToken': '<?= $block->getAccessToken() ?>',
         'currency_symbol': '<?= $block->getCurrencySymbol() ?>',
@@ -11,7 +12,6 @@
         'service_sort_order': '<?= $block->getServiceSortOrder() ?>',
         'home_icon': '<?= $block->getMapHomeIcon() ?>',
         'use_standard': '<?= $block->getUseStandard() ?>',
-        'use_calendar': '<?= $block->getUseCalendar() ?>',
         'use_drop_points': '<?= $block->getUseDropPoints() ?>',
         'default_service': '<?= $block->getDefaultService() ?>',
         'default_carrier': '<?= $block->getDefaultCarrier() ?>',
@@ -31,12 +31,19 @@
 </script>
 
 <script id="gfs-checkout-widget-template" type="text/x-magento-template">
+    <input type="hidden" name="checkoutResult" id="checkoutResult"/>
+    <input type="hidden" name="sessionID" id="sessionID"/>
+    <input type="hidden" name="checkoutData" id="checkoutData"/>
     <gfs-checkout
-            access-token="<%- data.access_token %>"
+            use-standard
+            <?php if ($block->getUseCalendar()): ?>use-calendar<?php endif; ?>
+            <?php if ($block->getUseStores()): ?>use-droppoints<?php endif; ?>
+            <?php if ($block->getUseDropPointStores()): ?>use-droppoints-stores<?php endif; ?>
             sessionid="sessionID"
             checkout-results="checkoutResult"
             checkout-data="checkoutData"
-            gfs-data="<%- data.gfs_data %>"
+            checkout-token="<%- data.access_token %>"
+            checkout-request="<%- data.gfs_data %>"
             initial-address="<%- data.initial_address %>"
             currency-symbol="<%- data.currency_symbol %>"
             delivery-types="<%- data.delivery_types %>"
@@ -46,10 +53,7 @@
             service-sort-order="<%- data.service_sort_order %>"
             <?php if ($block->getMapHomeIcon()): ?>home-icon="<%- data.home_icon %>"<?php endif; ?>
             use-standard="<%- data.use_standard %>"
-            use-calendar="<%- data.use_calendar %>"
             use-drop-points="<%- data.use_drop_points %>"
-            <?php if ($block->getUseStores()): ?>use-stores<?php endif; ?>
-            <?php if ($block->getUseDropPointStores()): ?>use-droppoints-stores<?php endif; ?>
             default-service="<%- data.default_service %>"
             default-carrier="<%- data.default_carrier %>"
             default-carrier-code="<%- data.default_carrier_code %>"

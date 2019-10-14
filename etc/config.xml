@@ -15,6 +15,7 @@
                 <calendar_delivery_title><![CDATA[Choose a delivery date and time]]></calendar_delivery_title>
                 <drop_point_title><![CDATA[Collect your order]]></drop_point_title>
                 <service_sort_order>cheapestFirst</service_sort_order>
+                <date_range>14</date_range>
                 <use_standard>1</use_standard>
                 <use_droppoints>1</use_droppoints>
                 <use_calendar>1</use_calendar>
