@@ -5,4 +5,8 @@
         <attribute code="gfs_checkout_result" type="string"/>
         <attribute code="gfs_session_id" type="string"/>
     </extension_attributes>
+    <extension_attributes for="Magento\Sales\Api\Data\OrderInterface">
+        <attribute code="gfs_close_checkout" type="string"/>
+        <attribute code="gfs_despatch_by" type="string"/>
+    </extension_attributes>
 </config>
