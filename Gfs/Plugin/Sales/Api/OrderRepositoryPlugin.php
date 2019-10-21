@@ -49,8 +49,12 @@ class OrderRepositoryPlugin
         /** @var OrderExtensionInterface $extensionAttributes */
         $extensionAttributes = $order->getExtensionAttributes();
         $extensionAttributes = $extensionAttributes ? $extensionAttributes : $this->_orderExtensionFactory->create();
-        $extensionAttributes->setGfsCloseCheckout($closeCheckout);
-        $extensionAttributes->setGfsDespatchBy($despatchBy);
+        if (trim($closeCheckout)) {
+            $extensionAttributes->setGfsCloseCheckout($closeCheckout);
+        }
+        if (trim($despatchBy)) {
+            $extensionAttributes->setGfsDespatchBy($despatchBy);
+        }
 
         $order->setExtensionAttributes($extensionAttributes);
 
@@ -72,8 +76,12 @@ class OrderRepositoryPlugin
             /** @var OrderExtensionInterface $extensionAttributes */
             $extensionAttributes = $order->getExtensionAttributes();
             $extensionAttributes = $extensionAttributes ? $extensionAttributes : $this->_orderExtensionFactory->create();
-            $extensionAttributes->setGfsCloseCheckout($closeCheckout);
-            $extensionAttributes->setGfsDespatchBy($despatchBy);
+            if (trim($closeCheckout)) {
+                $extensionAttributes->setGfsCloseCheckout($closeCheckout);
+            }
+            if (trim($despatchBy)) {
+                $extensionAttributes->setGfsDespatchBy($despatchBy);
+            }
 
             $order->setExtensionAttributes($extensionAttributes);
         }
