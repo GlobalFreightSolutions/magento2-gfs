@@ -1,5 +1,5 @@
 {
-    "name": "justshout",
+    "name": "gfs/checkout",
     "description": "Magento 2 GFS Checkout service module",
     "license": "Apache 2.0",
     "require": {
